@@ -12,7 +12,12 @@ import Orders from "../pages/admin/Orders";
 import Help from "../pages/admin/Help";
 import Preferences from "../pages/admin/Preferences";
 import Category from "../pages/admin/Category";
-import Home from "../pages/customer/Home";
+import Shop from "../pages/Shop";
+import Checkout from "../pages/customer/CheckoutPage";
+import CustomerLogin from "../pages/CustomerLogin";
+import ForgotPassword from "../pages/ForgotPassword";
+import Signup from "../pages/Signup";
+import UserProfile from "../pages/customer/UserProfilePage";
 
 const AppRoutes = () => {
     const { token, user } = useAuth();
@@ -21,8 +26,14 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Public Route */}
+            <Route path="/shop" element={<Shop />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<Home />} />
+            <Route path="/customer/login" element={<CustomerLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/signup" element={<Signup />} />
+
+            <Route path="/checkout" element={token && role === "CUSTOMER" ? <Checkout /> : <Navigate to="/customer/login" />} />
+            <Route path="/customer/profile" element={token && role === "CUSTOMER" ? <UserProfile /> : <Navigate to="/customer/login" />} />
 
             {/* Admin Layout with Role Protection */}
             {token && (role === "ADMIN" || role === "SUPER_ADMIN" || role === "USER") ? (

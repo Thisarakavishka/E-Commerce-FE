@@ -164,6 +164,7 @@ const Products = () => {
                             <th className="p-3 text-left text-xs font-semibold">Name</th>
                             <th className="p-3 text-center text-xs font-semibold">Category</th>
                             <th className="p-3 text-center text-xs font-semibold">Price</th>
+                            <th className="p-3 text-center text-xs font-semibold">Discount Price</th>
                             <th className="p-3 text-center text-xs font-semibold">Stock</th>
                             <th className="p-3 text-center text-xs font-semibold">Sales Count</th>
                             <th className="p-3 text-center text-xs font-semibold">Status</th>
@@ -176,6 +177,7 @@ const Products = () => {
                                 <td className="p-3 text-sm">{product.name}</td>
                                 <td className="p-3 text-center text-sm">{product.category.name}</td>
                                 <td className="p-3 text-center text-sm">${product.price}</td>
+                                <td className="p-3 text-center text-sm">${product.discountPrice}</td>
                                 <td className="p-3 text-center text-sm">{product.stock}</td>
                                 <td className="p-3 text-center text-sm">{product.salesCount}</td>
                                 <td className="p-3 text-center text-sm">
