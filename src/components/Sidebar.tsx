@@ -1,113 +1,205 @@
-import { Link, useLocation } from "react-router-dom";
-import { BsGrid1X2, BsPeople, BsFileText, BsBox, BsBell, BsGear, BsQuestionCircle, BsClipboard } from "react-icons/bs";
+import { useState, useEffect } from "react"
+import { Link, useLocation } from "react-router-dom"
+import { LayoutGrid, Users, FileText, ShoppingBag, Package, Folder, Bell, Settings, HelpCircle, ChevronLeft, ChevronRight, LogOut, } from "lucide-react"
+
+type NavLinkType = {
+    icon: React.ElementType
+    text: string
+    link: string
+    badge?: number
+}
 
 const Sidebar = () => {
-    const location = useLocation();
+    const location = useLocation()
+    const [collapsed, setCollapsed] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
+    const [mobileOpen, setMobileOpen] = useState(false)
 
-    const navLinks = [
-        { icon: BsGrid1X2, text: "Dashboard", link: "/admin/dashboard" },
-        { icon: BsPeople, text: "Customers", link: "/admin/customers" },
-        { icon: BsFileText, text: "Reports", link: "/admin/reports" },
-    ];
+    // Check if screen is mobile
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth < 1024)
+            if (window.innerWidth < 1024) {
+                setCollapsed(true)
+            }
+        }
 
-    const stockLinks = [
-        { icon: BsClipboard, text: "Orders", link: "/admin/orders" },
-        { icon: BsBox, text: "Products", link: "/admin/products" },
-        { icon: BsBox, text: "Category", link: "/admin/category" },
-    ];
+        checkScreenSize()
+        window.addEventListener("resize", checkScreenSize)
 
-    const settingsLinks = [
-        { icon: BsGear, text: "Preferences", link: "/admin/preferences" },
-        { icon: BsQuestionCircle, text: "Help", link: "/admin/help" },
-    ];
+        return () => {
+            window.removeEventListener("resize", checkScreenSize)
+        }
+    }, [])
+
+    // Dispatch event when sidebar is toggled
+    useEffect(() => {
+        // Create and dispatch custom event when collapsed state changes
+        const event = new CustomEvent("sidebarToggle", {
+            detail: { collapsed },
+        })
+        window.dispatchEvent(event)
+    }, [collapsed])
+
+    // Toggle mobile sidebar
+    const toggleMobileSidebar = () => {
+        setMobileOpen(!mobileOpen)
+    }
+
+    // Toggle sidebar collapse
+    const toggleSidebar = () => {
+        setCollapsed(!collapsed)
+    }
+
+    const navLinks: NavLinkType[] = [
+        { icon: LayoutGrid, text: "Dashboard", link: "/admin/dashboard" },
+        { icon: Users, text: "Customers", link: "/admin/customers" },
+        { icon: FileText, text: "Reports", link: "/admin/reports" },
+    ]
+
+    const stockLinks: NavLinkType[] = [
+        { icon: ShoppingBag, text: "Orders", link: "/admin/orders" },
+        { icon: Package, text: "Products", link: "/admin/products" },
+        { icon: Folder, text: "Category", link: "/admin/category" },
+    ]
+
+    const communicationLinks: NavLinkType[] = [
+        { icon: Bell, text: "Notifications", link: "/admin/notifications", badge: 14 },
+    ]
+
+    const settingsLinks: NavLinkType[] = [
+        { icon: Settings, text: "Preferences", link: "/admin/preferences" },
+        { icon: HelpCircle, text: "Help", link: "/admin/help" },
+    ]
+
+    const renderNavLinks = (links: NavLinkType[], title: string, showDivider?: boolean) => (
+        <div className="mb-6">
+            {/* Show title only when not collapsed */}
+            {!collapsed && (
+                <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3 px-4">{title}</h2>
+            )}
+
+            {/* Show divider when collapsed */}
+            {collapsed && showDivider && <hr className="border-gray-700 my-4 mx-2" />}
+
+            <ul className="space-y-1">
+                {links.map((item, index) => {
+                    const isActive = location.pathname === item.link
+                    return (
+                        <li key={index}>
+                            <Link
+                                to={item.link}
+                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative
+                                    ${isActive ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800/50 hover:text-white"}
+                                    ${collapsed ? "justify-center" : ""}
+                                `}
+                            >
+                                <item.icon className="w-5 h-5" />
+
+                                {!collapsed && <span className="text-sm font-medium">{item.text}</span>}
+
+                                {!collapsed && item.badge && (
+                                    <span className="ml-auto bg-gray-700 text-white text-xs rounded-full px-2 py-0.5">{item.badge}</span>
+                                )}
+
+                                {/* Tooltip for collapsed state */}
+                                {collapsed && (
+                                    <div className="absolute left-full ml-2 rounded-md px-2 py-1 bg-gray-800 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                                        {item.text}
+                                        {item.badge && ` (${item.badge})`}
+                                    </div>
+                                )}
+
+                                {/* Badge for collapsed state */}
+                                {collapsed && item.badge && (
+                                    <div className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                        {item.badge > 9 ? "9+" : item.badge}
+                                    </div>
+                                )}
+                            </Link>
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
+    )
+
+    // Mobile sidebar toggle button
+    const MobileToggle = () => (
+        <button
+            onClick={toggleMobileSidebar}
+            className="lg:hidden fixed bottom-4 left-4 z-50 bg-black text-white p-3 rounded-full shadow-lg"
+            aria-label="Toggle sidebar"
+        >
+            {mobileOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+        </button>
+    )
 
     return (
-        <aside className="w-60 h-screen bg-black text-white p-4 fixed left-0 top-0 z-10 flex flex-col">
+        <>
+            {/* Mobile overlay */}
+            {isMobile && mobileOpen && (
+                <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setMobileOpen(false)} />
+            )}
 
-            <h2 className="text-xs text-gray-400 mb-2 mt-[50px]">GENERAL</h2>
-            <ul className="space-y-2">
-                {navLinks.map((item, index) => {
-                    const isActive = location.pathname === item.link;
-                    return (
-                        <li key={index}>
-                            <Link to={item.link}
-                                className="flex items-center gap-3 p-2 text-white rounded-md transition-all duration-200"
-                                style={{
-                                    backgroundColor: isActive ? "rgba(156, 163, 175, 0.5)" : "transparent",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(156, 163, 175, 0.3)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isActive ? "rgba(156, 163, 175, 0.5)" : "transparent")}
-                            >
-                                <item.icon className="text-xl" />
-                                {item.text}
-                            </Link>
-                        </li>
-                    );
-                })}
-            </ul>
+            {/* Sidebar */}
+            <aside
+                className={`bg-black text-white fixed top-0 left-0 h-screen z-30 transition-all duration-300 flex flex-col
+          ${collapsed ? "w-16" : "w-64"}
+          ${isMobile ? (mobileOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0"}
+        `}
+            >
+                {/* Logo */}
+                <div
+                    className={`flex items-center justify-center h-16 border-b border-gray-800 ${collapsed ? "px-2" : "px-4"}`}
+                >
+                    <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Anton SC" }}>
+                        {collapsed ? "B" : "BATMAN"}
+                    </h1>
+                </div>
 
-            <h2 className="text-xs text-gray-400 mt-10 mb-2">STOCK & ORDERS</h2>
-            <ul className="space-y-2">
-                {stockLinks.map((item, index) => {
-                    const isActive = location.pathname === item.link;
-                    return (
-                        <li key={index}>
-                            <Link to={item.link}
-                                className="flex items-center gap-3 p-2 text-white rounded-md transition-all duration-200"
-                                style={{
-                                    backgroundColor: isActive ? "rgba(75, 85, 99, 0.5)" : "transparent",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(75, 85, 99, 0.3)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isActive ? "rgba(75, 85, 99, 0.5)" : "transparent")}
-                            >
-                                <item.icon className="text-xl" />
-                                {item.text}
-                            </Link>
-                        </li>
-                    );
-                })}
-            </ul>
+                {/* Toggle button (desktop only) */}
+                <button
+                    onClick={toggleSidebar}
+                    className="hidden lg:flex absolute -right-3 top-20 bg-gray-800 text-white p-1 rounded-full shadow-md"
+                    aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
 
-            <h2 className="text-xs text-gray-400 mt-10 mb-2">COMMUNICATION</h2>
-            <ul>
-                <li>
-                    <Link to="/admin/notifications"
-                        className="flex items-center justify-between p-2 text-white rounded-md transition-all duration-200"
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(75, 85, 99, 0.3)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                {/* Navigation */}
+                <div className="flex-1 overflow-y-auto py-6 px-2">
+                    {renderNavLinks(navLinks, "General", true)}
+                    {renderNavLinks(stockLinks, "Stock & Orders", true)}
+                    {renderNavLinks(communicationLinks, "Communication", true)}
+                    {renderNavLinks(settingsLinks, "Settings", false)} {/* last one, no divider */}
+                </div>
+
+
+                <div className="p-4 border-t border-gray-800">
+                    <Link
+                        to="/logout"
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-red-400 hover:bg-red-900/20 hover:text-red-300 group relative
+                        ${collapsed && !isMobile ? "justify-center" : ""}`}
+                        aria-label="Logout"
                     >
-                        <div className="flex items-center gap-3">
-                            <BsBell className="text-xl" />
-                            Notification
-                        </div>
-                        <span className="bg-gray-500 text-white text-xs rounded-full px-2 py-0.5">14</span>
+                        <LogOut className="w-5 h-5 shrink-0" />
+
+                        {(!collapsed || isMobile) && <span className="text-sm font-medium">Logout</span>}
+
+                        {collapsed && !isMobile && (
+                            <div className="absolute left-full ml-2 rounded-md px-2 py-1 bg-gray-800 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                                Logout
+                            </div>
+                        )}
                     </Link>
-                </li>
-            </ul>
 
-            <h2 className="text-xs text-gray-400 mt-10 mb-2">SETTINGS</h2>
-            <ul className="space-y-2">
-                {settingsLinks.map((item, index) => {
-                    const isActive = location.pathname === item.link;
-                    return (
-                        <li key={index}>
-                            <Link to={item.link}
-                                className="flex items-center gap-3 p-2 text-white rounded-md transition-all duration-200"
-                                style={{
-                                    backgroundColor: isActive ? "rgba(55, 65, 81, 0.5)" : "transparent",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.3)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isActive ? "rgba(55, 65, 81, 0.5)" : "transparent")}
-                            >
-                                <item.icon className="text-xl" />
-                                {item.text}
-                            </Link>
-                        </li>
-                    );
-                })}
-            </ul>
-        </aside>
-    );
-};
+                </div>
+            </aside>
 
-export default Sidebar;
+            <MobileToggle />
+        </>
+    )
+}
+
+export default Sidebar
