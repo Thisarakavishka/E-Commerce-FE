@@ -18,6 +18,7 @@ import CustomerLogin from "../pages/CustomerLogin";
 import ForgotPassword from "../pages/ForgotPassword";
 import Signup from "../pages/Signup";
 import UserProfile from "../pages/customer/UserProfilePage";
+import Home from "../pages/Home";
 
 const AppRoutes = () => {
     const { token, user } = useAuth();
@@ -26,6 +27,7 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Public Route */}
+            <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/customer/login" element={<CustomerLogin />} />

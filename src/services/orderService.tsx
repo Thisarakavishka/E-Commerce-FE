@@ -84,3 +84,25 @@ export const placeOrder = async (cartItems: { _id: string, quantity: number }[],
         throw error;
     }
 };
+
+
+export const cancelOrder = async (orderId: string, token: string): Promise<void> => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/orders/${orderId}/cancel`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+  
+      if (!response.ok) {
+        throw new Error("Failed to cancel order")
+      }
+  
+      return await response.json()
+    } catch (error) {
+      console.error("Error canceling order:", error)
+      throw error
+    }
+  }
