@@ -6,5 +6,7 @@ export const formatUserRole = (role: string) => {
         customer: "Customer",
     };
 
-    return roleMap[role] || "Unknown Role";
+    const withLowerCaseRole = role.toLowerCase();
+
+    return roleMap[withLowerCaseRole] || "Unknown Role";
 };

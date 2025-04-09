@@ -7,8 +7,10 @@ import ConfirmationModal from "../../components/modals/ConfirmationModal"
 import ToggleButton from "../../components/ToggleButton"
 import type { Product } from "../../models/Product"
 import { Eye, Pencil, Trash2, Search, ChevronDown, ChevronUp, Filter, Download, RefreshCw, ShieldAlert, } from "lucide-react"
-
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER"
+import { exportToCSV } from "../../utils/exportUtils"
+import { useRolePermissions } from "../../hooks/userRolePermissions"
+import { formatUserRole } from "../../utils/formatRole"
+import AnimatedCounter from "../../components/AnimatedCounter"
 
 const Products = () => {
     const token = localStorage.getItem("token")
@@ -29,34 +31,13 @@ const Products = () => {
     } | null>(null)
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
 
-    // Get user role from localStorage
-    const [userRole, setUserRole] = useState<UserRole>("USER")
-
-    useEffect(() => {
-        const getUserRole = () => {
-            try {
-                // Example: decode JWT token or get from localStorage
-                const userData = localStorage.getItem("user")
-                if (userData) {
-                    const parsedData = JSON.parse(userData)
-                    const role = parsedData.role.toUpperCase()
-                    setUserRole(role as UserRole)
-                }
-            } catch (error) {
-                console.error("Failed to get user role:", error)
-                // Default to lowest permission level if there's an error
-                setUserRole("USER")
-            }
-        }
-
-        getUserRole()
-    }, [])
-
-    // Permission check functions based on role
-    const canCreateProduct = () => ["SUPER_ADMIN", "ADMIN"].includes(userRole)
-    const canUpdateProduct = () => ["SUPER_ADMIN", "ADMIN"].includes(userRole)
-    const canChangeStatus = () => ["SUPER_ADMIN", "ADMIN"].includes(userRole)
-    const canDeleteProduct = () => userRole === "SUPER_ADMIN"
+    const {
+        userRole,
+        canCreate: canCreateProduct,
+        canUpdate: canUpdateProduct,
+        canChangeStatus,
+        canDelete: canDeleteProduct,
+    } = useRolePermissions("product")
 
     // Function to fetch products and update state
     const loadProducts = async () => {
@@ -167,7 +148,7 @@ const Products = () => {
 
     const handleToggleStatus = async (id: string) => {
         if (!token) return console.error("No token found")
-        if (!canChangeStatus()) {
+        if (!canChangeStatus) {
             alert("You don't have permission to change product status")
             return
         }
@@ -198,7 +179,7 @@ const Products = () => {
     }
 
     const openAddProductModal = () => {
-        if (!canCreateProduct()) {
+        if (!canCreateProduct) {
             alert("You don't have permission to add products")
             return
         }
@@ -208,7 +189,7 @@ const Products = () => {
     const closeAddModal = () => setIsModalOpen(false)
 
     const openUpdateProductModal = (productId: string) => {
-        if (!canUpdateProduct()) {
+        if (!canUpdateProduct) {
             alert("You don't have permission to update products")
             return
         }
@@ -229,7 +210,7 @@ const Products = () => {
 
     const handleDeleteProduct = async () => {
         if (!token || !productToDelete) return console.error("No token found")
-        if (!canDeleteProduct()) {
+        if (!canDeleteProduct) {
             alert("You don't have permission to delete products")
             return
         }
@@ -246,7 +227,7 @@ const Products = () => {
     }
 
     const openDeleteModal = (productId: string) => {
-        if (!canDeleteProduct()) {
+        if (!canDeleteProduct) {
             alert("You don't have permission to delete products")
             return
         }
@@ -263,39 +244,19 @@ const Products = () => {
     const uniqueCategories = Array.from(new Set(products.map((product) => product.category?.name || ""))).filter(Boolean)
 
     const handleExportCSV = () => {
-        const headers = [
-            "Name",
-            "Category",
-            "Price",
-            "Discount Price",
-            "Stock",
-            "Sales Count",
-            "Status"
-        ]
-
-        const rows = filteredProducts.map((product) => [
-            product.name,
-            product.category?.name || "N/A",
-            product.price,
-            product.discountPrice || "-",
-            product.stock,
-            product.salesCount,
-            product.isActive ? "Active" : "Inactive"
-        ])
-
-        const csvContent =
-            "data:text/csv;charset=utf-8," +
-            [headers, ...rows]
-                .map((row) => row.map(String).map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
-                .join("\n")
-
-        const encodedUri = encodeURI(csvContent)
-        const link = document.createElement("a")
-        link.setAttribute("href", encodedUri)
-        link.setAttribute("download", "products.csv")
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        exportToCSV<Product>(
+            filteredProducts,
+            [
+                { label: "Name", key: "name" },
+                { label: "Category", key: (product) => product.category?.name || "N/A" },
+                { label: "Price", key: (product) => product.price.toString() },
+                { label: "Discount Price", key: (product) => product.discountPrice?.toString() || "-" },
+                { label: "Stock", key: (product) => product.stock.toString() },
+                { label: "Sales Count", key: (product) => product.salesCount.toString() },
+                { label: "Status", key: (product) => (product.isActive ? "Active" : "Inactive") },
+            ],
+            "products.csv",
+        )
     }
 
     return (
@@ -303,12 +264,12 @@ const Products = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-baseline gap-2">
                     <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-                    <span className="text-gray-600 text-2xl">{products.length}</span>
+                    <AnimatedCounter value={products.length} className="text-gray-600 text-2xl" />
 
                     {/* Role indicator */}
                     <div className="ml-2 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-xs font-medium">
                         <ShieldAlert className="w-3 h-3" />
-                        <span>{userRole}</span>
+                        <span>{formatUserRole(userRole)}</span>
                     </div>
                 </div>
 
@@ -364,7 +325,7 @@ const Products = () => {
                     </button>
 
                     {/* Create Button */}
-                    {canCreateProduct() && (
+                    {canCreateProduct && (
                         <button
                             onClick={openAddProductModal}
                             className="bg-black text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
@@ -482,7 +443,7 @@ const Products = () => {
                                                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock}</td>
                                                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{product.salesCount}</td>
                                                 <td className="px-3 py-4 whitespace-nowrap text-center">
-                                                    {canChangeStatus() ? (
+                                                    {canChangeStatus ? (
                                                         <ToggleButton
                                                             isActive={product.isActive ?? false}
                                                             onToggle={() => handleToggleStatus(product._id)}
@@ -506,7 +467,7 @@ const Products = () => {
                                                             <Eye className="w-5 h-5" />
                                                         </button>
 
-                                                        {canUpdateProduct() && (
+                                                        {canUpdateProduct && (
                                                             <button
                                                                 onClick={() => openUpdateProductModal(product._id)}
                                                                 className="text-gray-600 hover:text-gray-900 p-1 rounded-full hover:bg-gray-100"
@@ -516,7 +477,7 @@ const Products = () => {
                                                             </button>
                                                         )}
 
-                                                        {canDeleteProduct() && (
+                                                        {canDeleteProduct && (
                                                             <button
                                                                 onClick={() => openDeleteModal(product._id)}
                                                                 className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-gray-100"

@@ -12,6 +12,16 @@ export const fetchCategories = async () => {
     }
 };
 
+export const fetchActiveCategories = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/active`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching categories", error);
+        return [];
+    }
+};
+
 export const fetchCategoryById = async (id: string, token: string) => {
     try {
         const response = await axios.get(`${API_URL}/${id}`, {

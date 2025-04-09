@@ -18,8 +18,9 @@ const Sidebar = () => {
     // Check if screen is mobile
     useEffect(() => {
         const checkScreenSize = () => {
-            setIsMobile(window.innerWidth < 1024)
-            if (window.innerWidth < 1024) {
+            const isMobileView = window.innerWidth < 1024
+            setIsMobile(isMobileView)
+            if (isMobileView && !mobileOpen) {
                 setCollapsed(true)
             }
         }
@@ -30,7 +31,7 @@ const Sidebar = () => {
         return () => {
             window.removeEventListener("resize", checkScreenSize)
         }
-    }, [])
+    }, [mobileOpen])
 
     // Dispatch event when sidebar is toggled
     useEffect(() => {
@@ -74,13 +75,13 @@ const Sidebar = () => {
 
     const renderNavLinks = (links: NavLinkType[], title: string, showDivider?: boolean) => (
         <div className="mb-6">
-            {/* Show title only when not collapsed */}
-            {!collapsed && (
+            {/* Show title only when not collapsed or on mobile with open sidebar */}
+            {(!collapsed || (isMobile && mobileOpen)) && (
                 <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3 px-4">{title}</h2>
             )}
 
-            {/* Show divider when collapsed */}
-            {collapsed && showDivider && <hr className="border-gray-700 my-4 mx-2" />}
+            {/* Show divider when collapsed and not on mobile */}
+            {collapsed && !isMobile && showDivider && <hr className="border-gray-700 my-4 mx-2" />}
 
             <ul className="space-y-1">
                 {links.map((item, index) => {
@@ -90,28 +91,28 @@ const Sidebar = () => {
                             <Link
                                 to={item.link}
                                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative
-                                    ${isActive ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800/50 hover:text-white"}
-                                    ${collapsed ? "justify-center" : ""}
-                                `}
+                  ${isActive ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800/50 hover:text-white"}
+                  ${collapsed && !isMobile ? "justify-center" : ""}
+                `}
                             >
-                                <item.icon className="w-5 h-5" />
+                                <item.icon className="w-5 h-5 shrink-0" />
 
-                                {!collapsed && <span className="text-sm font-medium">{item.text}</span>}
+                                {(!collapsed || (isMobile && mobileOpen)) && <span className="text-sm font-medium">{item.text}</span>}
 
-                                {!collapsed && item.badge && (
+                                {(!collapsed || (isMobile && mobileOpen)) && item.badge && (
                                     <span className="ml-auto bg-gray-700 text-white text-xs rounded-full px-2 py-0.5">{item.badge}</span>
                                 )}
 
-                                {/* Tooltip for collapsed state */}
-                                {collapsed && (
+                                {/* Tooltip for collapsed state - only show on desktop */}
+                                {collapsed && !isMobile && (
                                     <div className="absolute left-full ml-2 rounded-md px-2 py-1 bg-gray-800 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                                         {item.text}
                                         {item.badge && ` (${item.badge})`}
                                     </div>
                                 )}
 
-                                {/* Badge for collapsed state */}
-                                {collapsed && item.badge && (
+                                {/* Badge for collapsed state - only show on desktop */}
+                                {collapsed && !isMobile && item.badge && (
                                     <div className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                                         {item.badge > 9 ? "9+" : item.badge}
                                     </div>
@@ -145,16 +146,16 @@ const Sidebar = () => {
             {/* Sidebar */}
             <aside
                 className={`bg-black text-white fixed top-0 left-0 h-screen z-30 transition-all duration-300 flex flex-col
-          ${collapsed ? "w-16" : "w-64"}
+          ${collapsed && !isMobile ? "w-16" : "w-64"}
           ${isMobile ? (mobileOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0"}
         `}
             >
                 {/* Logo */}
                 <div
-                    className={`flex items-center justify-center h-16 border-b border-gray-800 ${collapsed ? "px-2" : "px-4"}`}
+                    className={`flex items-center justify-center h-16 border-b border-gray-800 ${collapsed && !isMobile ? "px-2" : "px-4"}`}
                 >
-                    <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Anton SC" }}>
-                        {collapsed ? "B" : "BATMAN"}
+                    <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "'Anton', sans-serif" }}>
+                        {collapsed && !isMobile ? "B" : "BATMAN"}
                     </h1>
                 </div>
 
@@ -172,20 +173,20 @@ const Sidebar = () => {
                     {renderNavLinks(navLinks, "General", true)}
                     {renderNavLinks(stockLinks, "Stock & Orders", true)}
                     {renderNavLinks(communicationLinks, "Communication", true)}
-                    {renderNavLinks(settingsLinks, "Settings", false)} {/* last one, no divider */}
+                    {renderNavLinks(settingsLinks, "Settings", true)}
                 </div>
 
-
+                {/* Logout button */}
                 <div className="p-4 border-t border-gray-800">
                     <Link
                         to="/logout"
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-red-400 hover:bg-red-900/20 hover:text-red-300 group relative
-                        ${collapsed && !isMobile ? "justify-center" : ""}`}
+              ${collapsed && !isMobile ? "justify-center" : ""}`}
                         aria-label="Logout"
                     >
                         <LogOut className="w-5 h-5 shrink-0" />
 
-                        {(!collapsed || isMobile) && <span className="text-sm font-medium">Logout</span>}
+                        {(!collapsed || (isMobile && mobileOpen)) && <span className="text-sm font-medium">Logout</span>}
 
                         {collapsed && !isMobile && (
                             <div className="absolute left-full ml-2 rounded-md px-2 py-1 bg-gray-800 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
@@ -193,7 +194,6 @@ const Sidebar = () => {
                             </div>
                         )}
                     </Link>
-
                 </div>
             </aside>
 
