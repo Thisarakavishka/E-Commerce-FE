@@ -4,12 +4,13 @@ interface User {
     firstName: string;
     lastName: string;
     role: string;
+    id: string;
 }
 
 interface AuthContextType {
     token: string | null;
     user: User | null;
-    login: (token: string, role: string, username: string) => void;
+    login: (token: string, role: string, username: string, id: string) => void;
     logout: () => void;
 }
 
@@ -19,13 +20,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
     const [user, setUser] = useState<User | null>(localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null);
 
-    const login = (newToken: string, role: string, username: string) => {
+    const login = (newToken: string, role: string, username: string, id: string) => {
 
         const nameParts = username.split(" ");
         const firstName = nameParts[0] || "";
         const lastName = nameParts.slice(1).join(" ") || "";
 
-        const userData: User = { firstName, lastName, role };
+        const userData: User = { firstName, lastName, role, id };
 
         // Save to local storage
         localStorage.setItem("token", newToken);

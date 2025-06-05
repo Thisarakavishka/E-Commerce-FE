@@ -1,15 +1,4 @@
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts"
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, } from "recharts"
 import { ArrowUpRight, ArrowDownRight, DollarSign, ShoppingBag, Users, TrendingUp, Package, Clock } from "lucide-react"
 
 // Mock data for dashboard
@@ -288,4 +277,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard
-

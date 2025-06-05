@@ -30,8 +30,8 @@ const LoginPage = () => {
             if (!token || !user?.role) {
                 throw new Error("Invalid response from server")
             }
-
-            login(token, user.role, user.name)
+            
+            login(token, user.role, user.name, user._id)
 
             const rolePath = ["ADMIN", "SUPER_ADMIN", "USER"].includes(user.role.toUpperCase())
                 ? "/admin/dashboard"
